@@ -1,48 +1,47 @@
-# ai-nursecall-runtime-anomaly-detection
-Runtime Anomaly Detection and Assurance Framework for AI-Driven Nurse Call Systems (JHU 695.715 Course Project)
+
+### 📘 **Runtime Anomaly Detection & Assurance Framework for AI-Driven Nurse Call Systems**
+
+**JHU 695.715 – Assured Autonomy — Course Project**
+**Author:** Yuanyuan (Maxine) Liu
+**Instructor:** David Concepcion
+**Term:** Fall 2025
 
 ---
 
-```markdown
-# Runtime Anomaly Detection & Assurance Framework for AI-Driven Nurse Call Systems
-JHU 695.715 – Assured Autonomy — Course Project  
-Author: Yuanyuan (Maxine) Liu  
-Instructor: David Concepcion  
-Term: Fall 2025
+## 🌟 Overview
 
----
+This repository provides a complete, reproducible anomaly-detection framework for real-world, high-volume service-ticket data.
 
-## 🧭 Overview
+✨ **It includes:**
 
-This repository provides a complete, reproducible anomaly-detection framework for real-world, high-volume service-ticket data streams (modeled after AI-driven nurse-call systems).  
-It includes:
-
-- Lightweight anomaly detectors (Isolation Forest, One-Class SVM)  
-- A supervised assurance baseline (Random Forest)  
-- An optional TensorFlow autoencoder  
-- Threshold-sweep tools for safety-critical operations tuning  
-- SHAP-based interpretability (if installed)  
-- 18 publication-ready evaluation figures and summary tables  
-- A Streamlit web demo for interactive exploration  
+* Lightweight anomaly detectors (Isolation Forest, One-Class SVM)
+* A supervised assurance baseline (Random Forest)
+* An optional TensorFlow autoencoder
+* Threshold-sweep tools for safety-critical operations tuning
+* SHAP-based interpretability (if installed)
+* 18 publication-ready evaluation figures and summary tables
+* A Streamlit web demo for interactive exploration
 
 The entire workflow—from raw CSV to figures and metrics—runs in a single script.
 
-This repo is designed for **IEEE-grade research reproducibility**, including clear folder structure, documentation, and optional DOI support for long-term archival.
+This repo is designed for **IEEE-grade research reproducibility**, with clean folder structure, documentation, and deterministic processing.
 
 ---
 
-
 ## 📁 Repository Structure
-.
-├── DATA/                         # Input data (public NYC 311-style CSVs)
-│   ├── erm2-nwe9.csv             # Main subset used in the experiments
+
+```
+ai-nursecall-runtime-anomaly-detection/
+│
+├── DATA/                            # Input data (public NYC 311-style CSVs)
+│   ├── erm2-nwe9.csv                # Main subset used in the experiments
 │   └── 311_ServiceRequest_2010-Present_DataDictionary_Updated_2023.xlsx
 │
-├── src/
-│   ├── experiment_real_plus.py   # Main experiment script (use this one)
-│   └── experiment.py             # Older / simplified experiment script
+├── src/                             # Source code
+│   ├── experiment_real_plus.py      # Main experiment script (use this one)
+│   └── experiment.py                # Older / simplified experiment script
 │
-├── results/                      # Auto-generated figures & tables (current run)
+├── results/                         # Auto-generated figures & tables
 │   ├── ae_train_curve.png
 │   ├── alerts_per_hour.png
 │   ├── box_delay_by_category.png
@@ -64,24 +63,23 @@ This repo is designed for **IEEE-grade research reproducibility**, including cle
 │   ├── real_calls_clean.csv
 │   └── summary_metrics.csv
 │
-├── results000/                   # Earlier experiment run (kept for comparison)
+├── results000/                      # Earlier experiment run (kept for comparison)
 │   ├── metrics_bar_ci_ar010.png
 │   └── pr_curves_multi.png
 │
-├── docs/                         # Paper drafts & written summaries
-│   ├── Draft2_Runtime Anomaly Detection and Assurance Framework for AI-Driven Nurse Call Systems.pdf
+├── docs/                            # Paper drafts & written summaries
+│   ├── Draft2_Runtime_Anomaly_Detection_and_Assurance_Framework.pdf
 │   ├── Experimental Results and Figure Summary.docx
 │   └── Read Me.docx
 │
-├── streamlit/
-│   └── app.py                    # Streamlit demo (to be added)
+├── streamlit/                       # Streamlit demo
+│   └── app.py
 │
-├── requirements.txt              # Python dependencies
+├── requirements.txt                 # Python dependencies
 ├── .gitignore
 ├── LICENSE
 └── README.md
-
-````
+```
 
 ---
 
@@ -106,6 +104,8 @@ Install dependencies:
 
 ```bash
 pip install -r requirements.txt
+
+
 ```
 
 ---
