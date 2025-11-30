@@ -29,3 +29,8 @@ contain at least the following columns:
 - `weekday` – weekday index (0=Mon … 6=Sun)
 
 The script ignores additional columns and can be safely kept.
+
+
+Data download link
+311 Service Requests from 2010 to Present | NYC Open Data
+https://data.cityofnewyork.us/Social-Services/311-Service-Requests-from-2010-to-Present/erm2-nwe9/about_data
