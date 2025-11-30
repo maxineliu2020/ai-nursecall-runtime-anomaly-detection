@@ -1,0 +1,22 @@
+## Core scientific stack
+numpy>=1.23
+pandas>=1.5
+matplotlib>=3.7
+
+## Machine learning
+scikit-learn>=1.4
+
+## Optional: interpretability & deep learning baselines
+shap>=0.44      # optional; required only for SHAP plots
+tensorflow>=2.15  # optional; required only for autoencoder baseline
+
+## Web demo
+streamlit>=1.39
+
+## Excel support (for the NYC 311 data dictionary .xlsx)
+openpyxl>=3.1
+
+
+Explanation: 
+If you feel that TensorFlow is too heavy in the future, you can ask your classmates to only install the first few lines and comment out TensorFlow. 
+The "shap" option is also optional, but it is retained here for ease of reproduction.
