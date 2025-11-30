@@ -24,7 +24,6 @@ This repository provides a complete, reproducible anomaly-detection framework fo
 
 The entire workflow—from raw CSV to figures and metrics—runs in a single script.
 
-This repo is designed for **IEEE-grade research reproducibility**, with clean folder structure, documentation, and deterministic processing.
 
 ---
 
@@ -147,7 +146,7 @@ streamlit run streamlit/app.py
 
 Features include:
 
-* Upload your own service-call CSV
+* Upload service-call CSV
 * Autofit ML models
 * Interactive PR curves
 * Adjustable operational thresholds
@@ -200,7 +199,7 @@ Please cite this project as:
 ### **APA**
 
 Liu, Y. (2025). *Runtime Anomaly Detection and Assurance Framework for AI-Driven Nurse Call Systems (Version 1.0)*. GitHub.
-[https://github.com/](https://github.com/)<your-username>/ai-nursecall-runtime-anomaly-detection
+[https://github.com/](https://github.com/)maxineliu2020/ai-nursecall-runtime-anomaly-detection
 
 ### **BibTeX**
 
@@ -209,7 +208,7 @@ Liu, Y. (2025). *Runtime Anomaly Detection and Assurance Framework for AI-Driven
   author       = {Yuanyuan (Maxine) Liu},
   title        = {Runtime Anomaly Detection and Assurance Framework for AI-Driven Nurse Call Systems},
   year         = {2025},
-  url          = {https://github.com/<your-username>/ai-nursecall-runtime-anomaly-detection},
+  url          = {https://github.com/maxineliu2020/ai-nursecall-runtime-anomaly-detection},
   version      = {1.0},
   note         = {JHU 695.715 Assured Autonomy Course Project}
 }
