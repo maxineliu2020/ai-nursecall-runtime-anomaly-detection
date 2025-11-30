@@ -201,6 +201,15 @@ Please cite this project as:
 Liu, Y. (2025). *Runtime Anomaly Detection and Assurance Framework for AI-Driven Nurse Call Systems (Version 1.0)*. GitHub.
 [https://github.com/](https://github.com/)maxineliu2020/ai-nursecall-runtime-anomaly-detection
 
+## 📘 How to Cite
+
+If you use this repository, please cite:
+
+Liu, Y. (Maxine). (2025). *Runtime Anomaly Detection and Assurance Framework 
+for AI-Driven Nurse Call Systems* (Version 1.0) [Source Code]. Zenodo.  
+https://doi.org/10.5281/zenodo.1234567
+
+
 ### **BibTeX**
 
 ```bibtex
