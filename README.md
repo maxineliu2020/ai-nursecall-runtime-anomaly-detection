@@ -1,4 +1,4 @@
-
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17767143.svg)](https://doi.org/10.5281/zenodo.17767143)
 ### 📘 **Runtime Anomaly Detection & Assurance Framework for AI-Driven Nurse Call Systems**
 
 **JHU 695.715 – Assured Autonomy — Course Project**
@@ -184,10 +184,10 @@ To guarantee reproducibility:
 * Full pipeline deterministic with the provided CSV
 * All plotting code included
 
-If you create a Zenodo DOI, add it here:
+
 
 ```
-DOI: to be inserted (Zenodo)
+DOI: to be inserted (Zenodo) https://doi.org/10.5281/zenodo.17767143
 ```
 
 ---
