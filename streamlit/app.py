@@ -12,6 +12,7 @@ from sklearn.metrics import (
 )
 
 import matplotlib.pyplot as plt
+import shap
 
 
 # -------------------------------
@@ -27,7 +28,7 @@ st.set_page_config(
 # Helper functions
 # -------------------------------
 
-def load_dataset(uploaded_file: "UploadedFile | None") -> pd.DataFrame:
+def load_dataset(uploaded_file):
     """
     Load CSV from upload or from built-in small_demo.csv.
     """
@@ -41,7 +42,7 @@ def load_dataset(uploaded_file: "UploadedFile | None") -> pd.DataFrame:
     return df, source
 
 
-def guess_datetime_columns(df: pd.DataFrame) -> tuple[str | None, str | None]:
+def guess_datetime_columns(df: pd.DataFrame):
     """
     Try to guess 'created' and 'closed' datetime columns based on column names.
     """
@@ -74,7 +75,6 @@ def engineer_time_features(df: pd.DataFrame) -> pd.DataFrame:
     # Try to reuse existing response-time column if available
     resp_cols = [c for c in df.columns if "resp_" in c.lower()]
     if resp_cols:
-        # Take the first resp_* column as hours
         resp_col = resp_cols[0]
         try:
             resp_minutes = pd.to_numeric(df[resp_col], errors="coerce") * 60.0
@@ -114,7 +114,7 @@ def engineer_time_features(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def select_candidate_numeric_features(df: pd.DataFrame) -> list[str]:
+def select_candidate_numeric_features(df: pd.DataFrame):
     """
     Automatically select reasonable numeric features for anomaly detection.
 
@@ -143,7 +143,7 @@ def select_candidate_numeric_features(df: pd.DataFrame) -> list[str]:
         "number",
     ]
 
-    candidate_cols: list[str] = []
+    candidate_cols = []
     n = len(df)
 
     for col in numeric_cols:
@@ -161,7 +161,7 @@ def select_candidate_numeric_features(df: pd.DataFrame) -> list[str]:
     return candidate_cols
 
 
-def find_binary_label_column(df: pd.DataFrame) -> str | None:
+def find_binary_label_column(df: pd.DataFrame):
     """
     Try to find a binary ground-truth label column, e.g., is_anomaly.
     """
@@ -190,7 +190,7 @@ def find_binary_label_column(df: pd.DataFrame) -> str | None:
     return None
 
 
-def get_reasonable_category_column(df: pd.DataFrame) -> str | None:
+def get_reasonable_category_column(df: pd.DataFrame):
     """
     Get a categorical column suitable for grouping anomaly rate:
     e.g., category / complaint_type / dept / ward.
@@ -212,6 +212,7 @@ def get_reasonable_category_column(df: pd.DataFrame) -> str | None:
         "department",
         "unit",
         "ward",
+        "address_type",
     ]
     for name in priority_order:
         for c in candidates:
@@ -339,7 +340,7 @@ else:
         help="You can deselect columns that are IDs, codes, or coordinates.",
     )
 
-    col_c, col_s = st.columns(2)
+    col_c, col_s, col_e = st.columns(3)
     with col_c:
         contamination = st.slider(
             "Estimated fraction of anomalies in the data",
@@ -355,6 +356,15 @@ else:
             max_value=9999,
             value=42,
             step=1,
+        )
+    with col_e:
+        use_shap = st.checkbox(
+            "SHAP explainability",
+            value=False,
+            help=(
+                "Compute global feature importance using SHAP (TreeExplainer). "
+                "For large datasets a random subset will be used."
+            ),
         )
 
     run_pressed = st.button("Run anomaly detection")
@@ -386,6 +396,48 @@ else:
         st.write("### Anomaly flag distribution")
         st.bar_chart(df_result["anomaly_flag"].value_counts())
 
+        # ------------------------------------------
+        # 3.1 SHAP global feature importance (optional)
+        # ------------------------------------------
+        if use_shap:
+            st.subheader("3.1 SHAP-based global feature importance (experimental)")
+            with st.spinner("Computing SHAP values for a random subset..."):
+                try:
+                    max_shap_samples = 2000
+                    n = X.shape[0]
+                    rng = np.random.default_rng(random_state)
+                    if n > max_shap_samples:
+                        idx = rng.choice(n, size=max_shap_samples, replace=False)
+                        X_shap = X.iloc[idx]
+                    else:
+                        X_shap = X
+
+                    explainer = shap.TreeExplainer(model)
+                    shap_values = explainer.shap_values(X_shap)
+
+                    if isinstance(shap_values, list):
+                        shap_values = shap_values[0]
+
+                    mean_abs = np.mean(np.abs(shap_values), axis=0)
+                    importance_df = pd.DataFrame(
+                        {"feature": X_shap.columns, "mean_abs_shap": mean_abs}
+                    ).sort_values("mean_abs_shap", ascending=True)
+
+                    fig, ax = plt.subplots(figsize=(6, 4))
+                    ax.barh(importance_df["feature"], importance_df["mean_abs_shap"])
+                    ax.set_xlabel("Mean |SHAP value| (global importance)")
+                    ax.set_ylabel("Feature")
+                    ax.grid(True, axis="x", alpha=0.2)
+                    st.pyplot(fig)
+
+                    st.caption(
+                        "Higher mean |SHAP| indicates features that contribute more "
+                        "to pushing a call towards *anomalous* behaviour under the "
+                        "current Isolation Forest model."
+                    )
+                except Exception as e:
+                    st.warning(f"SHAP explanation failed: {e}")
+
         # -------------------------------
         # 3. Advanced visualizations
         # -------------------------------
@@ -393,24 +445,14 @@ else:
 
         # Response time distribution (if available)
         if "resp_minutes" in df_result.columns:
-            st.subheader("3.1 Response time distribution")
+            st.subheader("3.2 Response time distribution")
 
             fig, ax = plt.subplots(figsize=(6, 4))
             normal = df_result[df_result["anomaly_flag"] == 0]["resp_minutes"]
             anom = df_result[df_result["anomaly_flag"] == 1]["resp_minutes"]
 
-            ax.hist(
-                normal,
-                bins=50,
-                alpha=0.7,
-                label="Normal",
-            )
-            ax.hist(
-                anom,
-                bins=50,
-                alpha=0.7,
-                label="Anomaly",
-            )
+            ax.hist(normal, bins=50, alpha=0.7, label="Normal")
+            ax.hist(anom, bins=50, alpha=0.7, label="Anomaly")
             ax.set_xlabel("Response time (minutes)")
             ax.set_ylabel("Count")
             ax.legend()
@@ -420,7 +462,7 @@ else:
 
         # Hour-of-day x weekday heatmap
         if {"hour", "weekday"}.issubset(df_result.columns):
-            st.subheader("3.2 Call volume heatmap (hour × weekday)")
+            st.subheader("3.3 Call volume heatmap (hour × weekday)")
             pivot = (
                 df_result.pivot_table(
                     index="weekday",
@@ -447,7 +489,7 @@ else:
         # Category-wise anomaly rate
         cat_col = get_reasonable_category_column(df_result)
         if cat_col is not None:
-            st.subheader(f"3.3 Anomaly rate by category: `{cat_col}`")
+            st.subheader(f"3.4 Anomaly rate by category: `{cat_col}`")
 
             group = df_result.groupby(cat_col)["anomaly_flag"].agg(
                 ["mean", "count"]
@@ -514,6 +556,9 @@ else:
                 ax.set_title("Precision–Recall curve")
                 st.pyplot(fig)
 
+# -------------------------------
+# Footer
+# -------------------------------
 st.markdown("---")
 st.caption(
     "Demo only – models and thresholds are simplified for visualization purposes. "
