@@ -143,6 +143,9 @@ Launch:
 
 ```bash
 streamlit run streamlit/app.py
+
+https://nursecall-demo.streamlit.app/
+
 ```
 
 Features include:
