@@ -1,6 +1,8 @@
 # 🎨 Streamlit App — AI Nurse-Call Runtime Anomaly Detection & Assurance  
 *(Interactive Demo for JHU 695.715 – Assured Autonomy Course Project)*
 
+https://nursecall-demo.streamlit.app/
+
 This folder contains the **interactive Streamlit demo** for the project:
 
 ### **Runtime Anomaly Detection and Assurance Framework for AI-Driven Nurse Call Systems**
