@@ -15,7 +15,7 @@ streamlit>=1.39
 
 ## Excel support (for the NYC 311 data dictionary .xlsx)
 openpyxl>=3.1
-
+shap>=0.44.0
 
 ## Explanation: 
 ## If you feel that TensorFlow is too heavy in the future, you can ask your classmates to only install the first few lines and comment out TensorFlow. 
