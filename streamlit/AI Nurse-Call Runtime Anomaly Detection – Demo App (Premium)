@@ -1,0 +1,190 @@
+# ============================================================
+# AI Nurse-Call Runtime Anomaly Detection – Demo App (Premium)
+# ============================================================
+
+import streamlit as st
+import pandas as pd
+import numpy as np
+import shap
+from sklearn.ensemble import IsolationForest
+from sklearn.metrics import confusion_matrix, precision_recall_curve, average_precision_score
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+st.set_page_config(page_title="AI Nurse-Call Anomaly Detection Demo", layout="wide")
+
+# ============================================================
+# 1. Title + Instructions
+# ============================================================
+
+st.title("AI Nurse-Call Runtime Anomaly Detection – Demo App")
+
+st.write("""
+This is a **lightweight but feature-rich anomaly detection demo** for nurse-call / service-ticket data.
+- If you **upload your own CSV**, the app will analyze that file.
+- If you **don't upload anything**, the app uses the built-in small demo dataset.
+""")
+
+# ============================================================
+# 2. Load CSV (uploaded or fallback)
+# ============================================================
+
+uploaded_file = st.file_uploader("Upload nurse-call / service-ticket CSV (optional)", type=["csv"])
+
+if uploaded_file:
+    df = pd.read_csv(uploaded_file)
+    st.success("Using your **uploaded CSV** file.")
+else:
+    df = pd.read_csv("small_demo.csv")   # make sure this exists!
+    st.info("Using built-in small demo dataset (small_demo.csv).")
+
+# Show preview
+st.header("1. Raw data preview")
+st.write(df.head(30))
+
+# ============================================================
+# 3. Basic preprocessing
+# ============================================================
+
+# Convert common datetime columns
+datetime_cols = [c for c in df.columns if "date" in c.lower()]
+for c in datetime_cols:
+    try:
+        df[c] = pd.to_datetime(df[c])
+    except:
+        pass
+
+# Create engineered features if time columns available
+if "created_date" in df.columns and "closed_date" in df.columns:
+    df["resp_minutes"] = (df["closed_date"] - df["created_date"]).dt.total_seconds() / 60
+else:
+    df["resp_minutes"] = np.random.exponential(scale=30, size=len(df))
+
+df["hour"] = df["created_date"].dt.hour if "created_date" in df.columns else np.random.randint(0, 24, len(df))
+df["weekday"] = df["created_date"].dt.weekday if "created_date" in df.columns else np.random.randint(0, 6, len(df))
+df["is_weekend"] = df["weekday"].isin([5, 6]).astype(int)
+
+# ============================================================
+# 4. Isolation Forest anomaly detection
+# ============================================================
+
+st.header("2. Simple anomaly detection (Isolation Forest)")
+
+numeric_features = ["resp_minutes", "hour", "weekday", "is_weekend"]
+existing_feats = [f for f in numeric_features if f in df.columns]
+
+features_selected = st.multiselect(
+    "Select numeric features:",
+    existing_feats,
+    default=existing_feats
+)
+
+contamination = st.slider(
+    "Estimated fraction of anomalies in data",
+    0.01, 0.20, 0.05, step=0.01
+)
+
+seed = st.number_input("Random seed", min_value=1, max_value=999, value=42)
+
+explain_shap = st.checkbox("SHAP explainability", value=True)
+
+if st.button("Run anomaly detection"):
+    model = IsolationForest(
+        contamination=contamination,
+        random_state=seed
+    )
+    df_clean = df[features_selected].fillna(df[features_selected].median())
+    preds = model.fit_predict(df_clean)
+
+    df["anomaly"] = (preds == -1).astype(int)
+    num_anom = df["anomaly"].sum()
+    st.success(f"Detected **{num_anom} anomalies** out of {len(df)} records ({num_anom/len(df):.1%}).")
+
+    st.subheader("Sample of detected anomalies")
+    st.dataframe(df[df["anomaly"] == 1].head(20))
+
+    # Bar plot of anomaly counts
+    st.subheader("Anomaly flag distribution")
+    fig, ax = plt.subplots(figsize=(6, 4))
+    df["anomaly"].value_counts().plot(kind="bar", ax=ax)
+    st.pyplot(fig)
+
+    # ============================================================
+    # 5. SHAP explainability
+    # ============================================================
+
+    if explain_shap:
+        st.header("3.1 SHAP-based global feature importance")
+
+        explainer = shap.Explainer(model, df_clean)
+        shap_values = explainer(df_clean)
+
+        mean_abs = np.abs(shap_values.values).mean(axis=0)
+        shap_df = pd.DataFrame({"feature": features_selected, "importance": mean_abs})
+        shap_df = shap_df.sort_values("importance", ascending=False)
+
+        # Plot
+        fig, ax = plt.subplots(figsize=(6, 4))
+        ax.barh(shap_df["feature"], shap_df["importance"])
+        ax.set_xlabel("Mean |SHAP value| (global importance)")
+        ax.set_ylabel("Feature")
+        st.pyplot(fig)
+
+    # ============================================================
+    # 6. Advanced Visualizations
+    # ============================================================
+
+    st.header("3. Advanced visualizations")
+
+    # Response time distribution
+    st.subheader("3.2 Response time distribution")
+    fig, ax = plt.subplots(figsize=(8, 4))
+    sns.histplot(data=df, x="resp_minutes", hue="anomaly", bins=50, ax=ax, kde=False)
+    st.pyplot(fig)
+
+    # Call volume heatmap
+    st.subheader("3.3 Call volume heatmap (hour × weekday)")
+    heatmap_data = df.groupby(["weekday", "hour"]).size().unstack(fill_value=0)
+    fig, ax = plt.subplots(figsize=(8, 4))
+    sns.heatmap(heatmap_data, cmap="viridis", ax=ax)
+    st.pyplot(fig)
+
+    # Anomaly by category (if exists)
+    cat_col = "address_type"
+    if cat_col in df.columns:
+        st.subheader(f"3.4 Anomaly rate by category: `{cat_col}`")
+        cat_stats = df.groupby(cat_col)["anomaly"].mean().reset_index()
+        fig, ax = plt.subplots(figsize=(6, 4))
+        ax.bar(cat_stats[cat_col], cat_stats["anomaly"])
+        ax.set_ylabel("Anomaly rate")
+        plt.xticks(rotation=45)
+        st.pyplot(fig)
+
+    # ============================================================
+    # 7. Evaluation if ground-truth label exists
+    # ============================================================
+
+    st.header("4. Evaluation against ground-truth labels (if available)")
+
+    if "is_anomaly" in df.columns:
+        y_true = df["is_anomaly"]
+        y_pred = df["anomaly"]
+
+        cm = confusion_matrix(y_true, y_pred)
+        st.write("Confusion matrix:")
+        st.write(cm)
+
+        precision, recall, _ = precision_recall_curve(y_true, df["anomaly"])
+        ap = average_precision_score(y_true, df["anomaly"])
+        st.write(f"Average Precision (AP): **{ap:.3f}**")
+
+        fig, ax = plt.subplots(figsize=(6, 4))
+        ax.plot(recall, precision)
+        ax.set_xlabel("Recall")
+        ax.set_ylabel("Precision")
+        ax.set_title("Precision–Recall curve")
+        st.pyplot(fig)
+
+    else:
+        st.info("Ground-truth label column `is_anomaly` not found.")
+
