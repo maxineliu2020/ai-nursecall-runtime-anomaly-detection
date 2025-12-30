@@ -13,48 +13,50 @@ jobs:
       APP_URL: "https://nursecall-demo.streamlit.app/"
 
     steps:
-      - name: Pre-check with curl (real)
+      - name: Pre-check with curl (cookie-aware)
         id: precheck
         run: |
           set -euo pipefail
 
           URL="${APP_URL}?ping=$(date +%s)"
-          echo "Pinging: $URL"
+          echo "Precheck URL: $URL"
 
-          # 真实请求：跟随重定向，但最多 10 次；保存响应体用于判断是否睡眠页
-          http_code="$(curl -sS -L --max-redirs 10 \
+          rm -f /tmp/cookies.txt /tmp/resp.html /tmp/headers.txt
+
+          # 一次请求拿到：body + headers + http_code + final_url
+          meta="$(curl -sS -L --max-redirs 20 \
+            --retry 3 --retry-all-errors \
+            --connect-timeout 10 --max-time 45 \
+            --compressed \
             -A "Mozilla/5.0 (compatible; GitHubActionsPing/1.0)" \
+            -c /tmp/cookies.txt -b /tmp/cookies.txt \
+            -D /tmp/headers.txt \
             -o /tmp/resp.html \
-            -w "%{http_code}" \
+            -w "HTTP=%{http_code} FINAL=%{url_effective}\n" \
             "$URL" || true)"
 
-          # 打印最终 effective URL（便于排查重定向循环）
-          effective_url="$(curl -sS -L --max-redirs 10 \
-            -A "Mozilla/5.0 (compatible; GitHubActionsPing/1.0)" \
-            -o /dev/null \
-            -w "%{url_effective}" \
-            "$URL" || true)"
+          echo "$meta"
 
-          echo "HTTP=${http_code}"
-          echo "FinalURL=${effective_url}"
+          http_code="$(echo "$meta" | sed -n 's/.*HTTP=\([0-9][0-9][0-9]\).*/\1/p' | tail -n 1)"
+          final_url="$(echo "$meta" | sed -n 's/.*FINAL=\(.*\)$/\1/p' | tail -n 1)"
 
           wake_needed="false"
 
-          # 1) 非 200：可能被中间页/循环重定向/阻断
-          if [ "$http_code" != "200" ]; then
+          # 非 200 大概率不是正常 app 页面
+          if [ "${http_code:-}" != "200" ]; then
             wake_needed="true"
           fi
 
-          # 2) 命中常见“休眠页/唤醒”文案（不同版本可能略不同）
-          if grep -Eqi "gone to sleep|get this app back up|wake up|is sleeping" /tmp/resp.html; then
+          # 命中常见“休眠页/唤醒”文案（不同版本略有差异）
+          if [ -f /tmp/resp.html ] && grep -Eqi "gone to sleep|get this app back up|wake up|is sleeping" /tmp/resp.html; then
             wake_needed="true"
           fi
 
+          echo "http_code=${http_code:-}" | tee -a "$GITHUB_OUTPUT"
+          echo "final_url=${final_url:-}" | tee -a "$GITHUB_OUTPUT"
           echo "wake_needed=${wake_needed}" | tee -a "$GITHUB_OUTPUT"
-          echo "http_code=${http_code}" | tee -a "$GITHUB_OUTPUT"
-          echo "effective_url=${effective_url}" | tee -a "$GITHUB_OUTPUT"
 
-          echo "Pre-check done. wake_needed=${wake_needed}"
+          echo "wake_needed=${wake_needed}"
 
       - name: Setup Node.js (only if wake needed)
         if: steps.precheck.outputs.wake_needed == 'true'
@@ -91,8 +93,7 @@ jobs:
             console.log('Open:', url);
             await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 });
 
-            // 休眠页按钮文案在不同版本可能不同，用 regex 尽量覆盖
-            // 你如果确认了按钮的准确文字，可以把这里改得更精确。
+            // 更聚焦一些，但仍保留兜底
             const candidates = [
               /get this app back up/i,
               /wake up/i,
@@ -102,7 +103,6 @@ jobs:
             ];
 
             let clicked = false;
-
             for (const re of candidates) {
               const btn = page.getByRole('button', { name: re });
               if (await btn.count()) {
@@ -112,13 +112,10 @@ jobs:
                 break;
               }
             }
+            console.log('Clicked:', clicked);
 
-            if (!clicked) {
-              console.log('No wake button found. Page might already be awake or UI text differs.');
-            }
-
-            // 给后端拉起时间（冷启动可能较慢）
-            await page.waitForTimeout(20000);
+            // 给冷启动更充足时间（Streamlit 冷启动经常 >10s）
+            await page.waitForTimeout(25000);
 
             console.log('After-wake URL:', page.url());
             await browser.close();
@@ -128,35 +125,42 @@ jobs:
           });
           NODE
 
-      - name: Final check with curl (must be awake)
+      - name: Final check with curl (cookie-aware, must be awake)
         run: |
           set -euo pipefail
 
           URL="${APP_URL}?ping=$(date +%s)"
-          echo "Final checking: $URL"
+          echo "Final check URL: $URL"
 
-          http_code="$(curl -sS -L --max-redirs 10 \
+          rm -f /tmp/final.html /tmp/final_headers.txt
+
+          # 关键：仍然启用 cookie engine，避免 curl 重定向循环
+          meta="$(curl -sS -L --max-redirs 20 \
+            --retry 3 --retry-all-errors \
+            --connect-timeout 10 --max-time 60 \
+            --compressed \
             -A "Mozilla/5.0 (compatible; GitHubActionsFinalCheck/1.0)" \
+            -c /tmp/cookies.txt -b /tmp/cookies.txt \
+            -D /tmp/final_headers.txt \
             -o /tmp/final.html \
-            -w "%{http_code}" \
+            -w "HTTP=%{http_code} FINAL=%{url_effective}\n" \
             "$URL")"
 
-          effective_url="$(curl -sS -L --max-redirs 10 \
-            -A "Mozilla/5.0 (compatible; GitHubActionsFinalCheck/1.0)" \
-            -o /dev/null \
-            -w "%{url_effective}" \
-            "$URL")"
+          echo "$meta"
 
-          echo "HTTP=${http_code}"
-          echo "FinalURL=${effective_url}"
+          http_code="$(echo "$meta" | sed -n 's/.*HTTP=\([0-9][0-9][0-9]\).*/\1/p' | tail -n 1)"
 
-          if [ "$http_code" != "200" ]; then
+          if [ "${http_code:-}" != "200" ]; then
             echo "ERROR: Final check HTTP != 200"
+            echo "---- last response headers ----"
+            tail -n 60 /tmp/final_headers.txt || true
             exit 1
           fi
 
           if grep -Eqi "gone to sleep|get this app back up|wake up|is sleeping" /tmp/final.html; then
             echo "ERROR: Still looks like sleeping page after wake attempt."
+            echo "---- last response headers ----"
+            tail -n 60 /tmp/final_headers.txt || true
             exit 1
           fi
 
