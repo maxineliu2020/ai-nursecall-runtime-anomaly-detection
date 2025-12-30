@@ -2,20 +2,162 @@ name: streamlit-keepalive
 
 on:
   schedule:
-    - cron: "0 */4 * * *"   # 每4小时一次（比6小时更稳，防止cron漂移导致超过12小时）
+    - cron: "*/15 * * * *"
   workflow_dispatch:
 
 jobs:
-  ping:
+  keepalive:
     runs-on: ubuntu-latest
+
+    env:
+      APP_URL: "https://nursecall-demo.streamlit.app/"
+
     steps:
-      - name: Ping Streamlit app
+      - name: Pre-check with curl (real)
+        id: precheck
         run: |
-          URL="https://nursecall-demo.streamlit.app/"
-          curl -L --max-time 60 --retry 2 --retry-delay 10 "$URL" > /tmp/page.html || true
-          if grep -qi "gone to sleep" /tmp/page.html; then
-            echo "Returned sleep page. If this persists, increase frequency or add click-to-wake workflow."
-          else
-            echo "Ping OK."
+          set -euo pipefail
+
+          URL="${APP_URL}?ping=$(date +%s)"
+          echo "Pinging: $URL"
+
+          # 真实请求：跟随重定向，但最多 10 次；保存响应体用于判断是否睡眠页
+          http_code="$(curl -sS -L --max-redirs 10 \
+            -A "Mozilla/5.0 (compatible; GitHubActionsPing/1.0)" \
+            -o /tmp/resp.html \
+            -w "%{http_code}" \
+            "$URL" || true)"
+
+          # 打印最终 effective URL（便于排查重定向循环）
+          effective_url="$(curl -sS -L --max-redirs 10 \
+            -A "Mozilla/5.0 (compatible; GitHubActionsPing/1.0)" \
+            -o /dev/null \
+            -w "%{url_effective}" \
+            "$URL" || true)"
+
+          echo "HTTP=${http_code}"
+          echo "FinalURL=${effective_url}"
+
+          wake_needed="false"
+
+          # 1) 非 200：可能被中间页/循环重定向/阻断
+          if [ "$http_code" != "200" ]; then
+            wake_needed="true"
           fi
 
+          # 2) 命中常见“休眠页/唤醒”文案（不同版本可能略不同）
+          if grep -Eqi "gone to sleep|get this app back up|wake up|is sleeping" /tmp/resp.html; then
+            wake_needed="true"
+          fi
+
+          echo "wake_needed=${wake_needed}" | tee -a "$GITHUB_OUTPUT"
+          echo "http_code=${http_code}" | tee -a "$GITHUB_OUTPUT"
+          echo "effective_url=${effective_url}" | tee -a "$GITHUB_OUTPUT"
+
+          echo "Pre-check done. wake_needed=${wake_needed}"
+
+      - name: Setup Node.js (only if wake needed)
+        if: steps.precheck.outputs.wake_needed == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install Playwright (only if wake needed)
+        if: steps.precheck.outputs.wake_needed == 'true'
+        run: |
+          set -euo pipefail
+          npm init -y >/dev/null 2>&1
+          npm i playwright >/dev/null
+          npx playwright install --with-deps chromium
+
+      - name: Wake Streamlit by clicking button (only if wake needed)
+        if: steps.precheck.outputs.wake_needed == 'true'
+        env:
+          APP_URL: ${{ env.APP_URL }}
+        run: |
+          set -euo pipefail
+          node - <<'NODE'
+          const { chromium } = require('playwright');
+
+          (async () => {
+            const base = process.env.APP_URL;
+            const url = `${base}?ping=${Date.now()}`;
+
+            const browser = await chromium.launch();
+            const page = await browser.newPage({
+              userAgent: 'Mozilla/5.0 (compatible; GitHubActionsPlaywright/1.0)'
+            });
+
+            console.log('Open:', url);
+            await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 });
+
+            // 休眠页按钮文案在不同版本可能不同，用 regex 尽量覆盖
+            // 你如果确认了按钮的准确文字，可以把这里改得更精确。
+            const candidates = [
+              /get this app back up/i,
+              /wake up/i,
+              /start/i,
+              /resume/i,
+              /yes/i
+            ];
+
+            let clicked = false;
+
+            for (const re of candidates) {
+              const btn = page.getByRole('button', { name: re });
+              if (await btn.count()) {
+                console.log('Click button matching:', re.toString());
+                await btn.first().click({ timeout: 5000 });
+                clicked = true;
+                break;
+              }
+            }
+
+            if (!clicked) {
+              console.log('No wake button found. Page might already be awake or UI text differs.');
+            }
+
+            // 给后端拉起时间（冷启动可能较慢）
+            await page.waitForTimeout(20000);
+
+            console.log('After-wake URL:', page.url());
+            await browser.close();
+          })().catch(err => {
+            console.error('Playwright error:', err);
+            process.exit(1);
+          });
+          NODE
+
+      - name: Final check with curl (must be awake)
+        run: |
+          set -euo pipefail
+
+          URL="${APP_URL}?ping=$(date +%s)"
+          echo "Final checking: $URL"
+
+          http_code="$(curl -sS -L --max-redirs 10 \
+            -A "Mozilla/5.0 (compatible; GitHubActionsFinalCheck/1.0)" \
+            -o /tmp/final.html \
+            -w "%{http_code}" \
+            "$URL")"
+
+          effective_url="$(curl -sS -L --max-redirs 10 \
+            -A "Mozilla/5.0 (compatible; GitHubActionsFinalCheck/1.0)" \
+            -o /dev/null \
+            -w "%{url_effective}" \
+            "$URL")"
+
+          echo "HTTP=${http_code}"
+          echo "FinalURL=${effective_url}"
+
+          if [ "$http_code" != "200" ]; then
+            echo "ERROR: Final check HTTP != 200"
+            exit 1
+          fi
+
+          if grep -Eqi "gone to sleep|get this app back up|wake up|is sleeping" /tmp/final.html; then
+            echo "ERROR: Still looks like sleeping page after wake attempt."
+            exit 1
+          fi
+
+          echo "OK: App appears awake."
