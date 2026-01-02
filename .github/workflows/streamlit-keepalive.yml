@@ -8,55 +8,71 @@ on:
 jobs:
   keepalive:
     runs-on: ubuntu-latest
-
     env:
       APP_URL: "https://nursecall-demo.streamlit.app/"
 
     steps:
-      - name: Pre-check with curl (cookie-aware)
+      - name: Pre-check (HTML + health) to decide wake
         id: precheck
         run: |
           set -euo pipefail
 
-          URL="${APP_URL}?ping=$(date +%s)"
-          echo "Precheck URL: $URL"
+          APP="${APP_URL%/}"
+          ROOT="${APP}/?ping=$(date +%s)"
+          HEALTH="${APP}/_stcore/health"
 
-          rm -f /tmp/cookies.txt /tmp/resp.html /tmp/headers.txt
+          rm -f /tmp/cookies.txt /tmp/root.html /tmp/root_headers.txt /tmp/health_headers.txt
+          echo "ROOT:   $ROOT"
+          echo "HEALTH: $HEALTH"
 
-          # 一次请求拿到：body + headers + http_code + final_url
-          meta="$(curl -sS -L --max-redirs 20 \
+          # 1) 拉主页 HTML（cookie-aware，避免重定向循环）
+          root_meta="$(curl -sS -L --max-redirs 20 \
             --retry 3 --retry-all-errors \
             --connect-timeout 10 --max-time 45 \
             --compressed \
             -A "Mozilla/5.0 (compatible; GitHubActionsPing/1.0)" \
             -c /tmp/cookies.txt -b /tmp/cookies.txt \
-            -D /tmp/headers.txt \
-            -o /tmp/resp.html \
-            -w "HTTP=%{http_code} FINAL=%{url_effective}\n" \
-            "$URL" || true)"
+            -D /tmp/root_headers.txt \
+            -o /tmp/root.html \
+            -w "ROOT_HTTP=%{http_code} ROOT_FINAL=%{url_effective}\n" \
+            "$ROOT" || true)"
+          echo "$root_meta"
 
-          echo "$meta"
+          root_code="$(echo "$root_meta" | sed -n 's/.*ROOT_HTTP=\([0-9]\{3\}\).*/\1/p' | tail -n 1)"
 
-          http_code="$(echo "$meta" | sed -n 's/.*HTTP=\([0-9][0-9][0-9]\).*/\1/p' | tail -n 1)"
-          final_url="$(echo "$meta" | sed -n 's/.*FINAL=\(.*\)$/\1/p' | tail -n 1)"
+          # 2) 打 health（更可靠：判断后端是否真正活着）
+          health_code="$(curl -sS -L --max-redirs 10 \
+            --retry 2 --retry-all-errors \
+            --connect-timeout 10 --max-time 20 \
+            -A "Mozilla/5.0 (compatible; GitHubActionsHealth/1.0)" \
+            -c /tmp/cookies.txt -b /tmp/cookies.txt \
+            -D /tmp/health_headers.txt \
+            -o /dev/null \
+            -w "%{http_code}" \
+            "$HEALTH" || true)"
+          echo "HEALTH_HTTP=$health_code"
 
           wake_needed="false"
 
-          # 非 200 大概率不是正常 app 页面
-          if [ "${http_code:-}" != "200" ]; then
+          # 判定 1：health 非 200 基本可以认为需要唤醒
+          if [ "${health_code:-}" != "200" ]; then
             wake_needed="true"
           fi
 
-          # 命中常见“休眠页/唤醒”文案（不同版本略有差异）
-          if [ -f /tmp/resp.html ] && grep -Eqi "gone to sleep|get this app back up|wake up|is sleeping" /tmp/resp.html; then
+          # 判定 2：主页 HTML 命中你截图的睡眠特征（强匹配）
+          if [ -f /tmp/root.html ] && grep -Eqi "Zzzz|gone to sleep|inactivity|get this app back up" /tmp/root.html; then
             wake_needed="true"
           fi
 
-          echo "http_code=${http_code:-}" | tee -a "$GITHUB_OUTPUT"
-          echo "final_url=${final_url:-}" | tee -a "$GITHUB_OUTPUT"
+          # 判定 3：主页非 200 也视为异常
+          if [ "${root_code:-}" != "200" ]; then
+            wake_needed="true"
+          fi
+
+          echo "wake_needed=$wake_needed"
           echo "wake_needed=${wake_needed}" | tee -a "$GITHUB_OUTPUT"
-
-          echo "wake_needed=${wake_needed}"
+          echo "root_code=${root_code:-}" | tee -a "$GITHUB_OUTPUT"
+          echo "health_code=${health_code:-}" | tee -a "$GITHUB_OUTPUT"
 
       - name: Setup Node.js (only if wake needed)
         if: steps.precheck.outputs.wake_needed == 'true'
@@ -72,7 +88,7 @@ jobs:
           npm i playwright >/dev/null
           npx playwright install --with-deps chromium
 
-      - name: Wake Streamlit by clicking button (only if wake needed)
+      - name: Wake by clicking the sleep button (only if wake needed)
         if: steps.precheck.outputs.wake_needed == 'true'
         env:
           APP_URL: ${{ env.APP_URL }}
@@ -82,86 +98,117 @@ jobs:
           const { chromium } = require('playwright');
 
           (async () => {
-            const base = process.env.APP_URL;
-            const url = `${base}?ping=${Date.now()}`;
+            const app = process.env.APP_URL.replace(/\/+$/, '');
+            const url = `${app}/?ping=${Date.now()}`;
+            console.log("Open:", url);
 
             const browser = await chromium.launch();
             const page = await browser.newPage({
               userAgent: 'Mozilla/5.0 (compatible; GitHubActionsPlaywright/1.0)'
             });
 
-            console.log('Open:', url);
             await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 });
 
-            // 更聚焦一些，但仍保留兜底
-            const candidates = [
-              /get this app back up/i,
-              /wake up/i,
-              /start/i,
-              /resume/i,
-              /yes/i
-            ];
+            // 你截图里按钮的精确文案
+            const exact = page.getByRole('button', { name: 'Yes, get this app back up!' });
 
-            let clicked = false;
-            for (const re of candidates) {
-              const btn = page.getByRole('button', { name: re });
-              if (await btn.count()) {
-                console.log('Click button matching:', re.toString());
-                await btn.first().click({ timeout: 5000 });
-                clicked = true;
-                break;
+            if (await exact.count()) {
+              console.log("Sleep button found. Clicking...");
+              await exact.first().click({ timeout: 5000 });
+            } else {
+              // 兜底：未来文案变化也能点到
+              const fallback = page.getByRole('button', { name: /get this app back up|wake up/i });
+              if (await fallback.count()) {
+                console.log("Fallback wake button found. Clicking...");
+                await fallback.first().click({ timeout: 5000 });
+              } else {
+                console.log("No wake button found (maybe already awake).");
               }
             }
-            console.log('Clicked:', clicked);
 
-            // 给冷启动更充足时间（Streamlit 冷启动经常 >10s）
-            await page.waitForTimeout(25000);
+            // 等待冷启动：按钮消失 + 页面进入正常 Streamlit 容器（尽量稳）
+            await page.waitForTimeout(2000);
+            try {
+              await page.waitForSelector('div[data-testid="stAppViewContainer"]', { timeout: 60000 });
+              console.log("Streamlit container detected.");
+            } catch {
+              console.log("Streamlit container not detected within timeout (may still be starting).");
+            }
 
-            console.log('After-wake URL:', page.url());
+            // 再给后端一点时间
+            await page.waitForTimeout(15000);
+
+            console.log("Final URL:", page.url());
             await browser.close();
           })().catch(err => {
-            console.error('Playwright error:', err);
+            console.error(err);
             process.exit(1);
           });
           NODE
 
-      - name: Final check with curl (cookie-aware, must be awake)
+      - name: Final check (health must be 200, not sleeping)
         run: |
           set -euo pipefail
+          APP="${APP_URL%/}"
+          ROOT="${APP}/?ping=$(date +%s)"
+          HEALTH="${APP}/_stcore/health"
 
-          URL="${APP_URL}?ping=$(date +%s)"
-          echo "Final check URL: $URL"
+          rm -f /tmp/final_cookies.txt /tmp/final_root.html /tmp/final_root_headers.txt /tmp/final_health_headers.txt
 
-          rm -f /tmp/final.html /tmp/final_headers.txt
+          # 强验证：health 连续重试直到 200 或失败
+          ok="false"
+          for i in 1 2 3 4 5; do
+            code="$(curl -sS -L --max-redirs 10 \
+              --connect-timeout 10 --max-time 20 \
+              -A "Mozilla/5.0 (compatible; GitHubActionsFinalHealth/1.0)" \
+              -c /tmp/final_cookies.txt -b /tmp/final_cookies.txt \
+              -D /tmp/final_health_headers.txt \
+              -o /dev/null \
+              -w "%{http_code}" \
+              "$HEALTH" || true)"
+            echo "Attempt $i: HEALTH_HTTP=$code"
+            if [ "$code" = "200" ]; then
+              ok="true"
+              break
+            fi
+            sleep 6
+          done
 
-          # 关键：仍然启用 cookie engine，避免 curl 重定向循环
-          meta="$(curl -sS -L --max-redirs 20 \
-            --retry 3 --retry-all-errors \
-            --connect-timeout 10 --max-time 60 \
+          if [ "$ok" != "true" ]; then
+            echo "ERROR: health endpoint never returned 200"
+            tail -n 80 /tmp/final_health_headers.txt || true
+            exit 1
+          fi
+
+          # 兜底：再抓一次主页，确保不是 Zzzz 睡眠页
+          curl -sS -L --max-redirs 20 \
+            --connect-timeout 10 --max-time 45 \
             --compressed \
-            -A "Mozilla/5.0 (compatible; GitHubActionsFinalCheck/1.0)" \
-            -c /tmp/cookies.txt -b /tmp/cookies.txt \
-            -D /tmp/final_headers.txt \
-            -o /tmp/final.html \
-            -w "HTTP=%{http_code} FINAL=%{url_effective}\n" \
-            "$URL")"
+            -A "Mozilla/5.0 (compatible; GitHubActionsFinalRoot/1.0)" \
+            -c /tmp/final_cookies.txt -b /tmp/final_cookies.txt \
+            -D /tmp/final_root_headers.txt \
+            -o /tmp/final_root.html \
+            "$ROOT"
 
-          echo "$meta"
-
-          http_code="$(echo "$meta" | sed -n 's/.*HTTP=\([0-9][0-9][0-9]\).*/\1/p' | tail -n 1)"
-
-          if [ "${http_code:-}" != "200" ]; then
-            echo "ERROR: Final check HTTP != 200"
-            echo "---- last response headers ----"
-            tail -n 60 /tmp/final_headers.txt || true
+          if grep -Eqi "Zzzz|gone to sleep|inactivity|get this app back up" /tmp/final_root.html; then
+            echo "ERROR: still looks like sleeping page after wake attempt"
             exit 1
           fi
 
-          if grep -Eqi "gone to sleep|get this app back up|wake up|is sleeping" /tmp/final.html; then
-            echo "ERROR: Still looks like sleeping page after wake attempt."
-            echo "---- last response headers ----"
-            tail -n 60 /tmp/final_headers.txt || true
-            exit 1
-          fi
+          echo "OK: app is awake."
+
+      - name: Upload debug artifacts on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: streamlit-keepalive-debug
+          path: |
+            /tmp/root.html
+            /tmp/root_headers.txt
+            /tmp/health_headers.txt
+            /tmp/final_root.html
+            /tmp/final_root_headers.txt
+            /tmp/final_health_headers.txt
+
 
           echo "OK: App appears awake."
