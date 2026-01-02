@@ -2,7 +2,7 @@ name: streamlit-keepalive
 
 on:
   schedule:
-    - cron: "*/15 * * * *"
+    - cron: "*/10 * * * *"
   workflow_dispatch:
 
 jobs:
@@ -12,7 +12,7 @@ jobs:
       APP_URL: "https://nursecall-demo.streamlit.app/"
 
     steps:
-      - name: Pre-check (HTML + health) to decide wake
+      - name: Decide wake strategy (HTML + health + hourly forced browser)
         id: precheck
         run: |
           set -euo pipefail
@@ -25,7 +25,7 @@ jobs:
           echo "ROOT:   $ROOT"
           echo "HEALTH: $HEALTH"
 
-          # 1) 拉主页 HTML（cookie-aware，避免重定向循环）
+          # ---- 1) Fetch root HTML (cookie-aware) ----
           root_meta="$(curl -sS -L --max-redirs 20 \
             --retry 3 --retry-all-errors \
             --connect-timeout 10 --max-time 45 \
@@ -37,10 +37,9 @@ jobs:
             -w "ROOT_HTTP=%{http_code} ROOT_FINAL=%{url_effective}\n" \
             "$ROOT" || true)"
           echo "$root_meta"
-
           root_code="$(echo "$root_meta" | sed -n 's/.*ROOT_HTTP=\([0-9]\{3\}\).*/\1/p' | tail -n 1)"
 
-          # 2) 打 health（更可靠：判断后端是否真正活着）
+          # ---- 2) Health check ----
           health_code="$(curl -sS -L --max-redirs 10 \
             --retry 2 --retry-all-errors \
             --connect-timeout 10 --max-time 20 \
@@ -54,44 +53,56 @@ jobs:
 
           wake_needed="false"
 
-          # 判定 1：health 非 200 基本可以认为需要唤醒
-          if [ "${health_code:-}" != "200" ]; then
-            wake_needed="true"
-          fi
-
-          # 判定 2：主页 HTML 命中你截图的睡眠特征（强匹配）
+          # Strong sleep detection (matches your Zzzz page)
           if [ -f /tmp/root.html ] && grep -Eqi "Zzzz|gone to sleep|inactivity|get this app back up" /tmp/root.html; then
             wake_needed="true"
           fi
-
-          # 判定 3：主页非 200 也视为异常
+          if [ "${health_code:-}" != "200" ]; then
+            wake_needed="true"
+          fi
           if [ "${root_code:-}" != "200" ]; then
             wake_needed="true"
           fi
 
+          # ---- 3) Hourly forced browser session ----
+          # Since we run every 10 min, every 6th run = ~1 hour.
+          # Use GitHub run_number to decide.
+          rn="${{ github.run_number }}"
+          force_browser="false"
+          if [ $((rn % 6)) -eq 0 ]; then
+            force_browser="true"
+          fi
+
           echo "wake_needed=$wake_needed"
+          echo "force_browser=$force_browser"
+          echo "root_code=${root_code:-}"
+          echo "health_code=${health_code:-}"
+
           echo "wake_needed=${wake_needed}" | tee -a "$GITHUB_OUTPUT"
+          echo "force_browser=${force_browser}" | tee -a "$GITHUB_OUTPUT"
           echo "root_code=${root_code:-}" | tee -a "$GITHUB_OUTPUT"
           echo "health_code=${health_code:-}" | tee -a "$GITHUB_OUTPUT"
 
-      - name: Setup Node.js (only if wake needed)
-        if: steps.precheck.outputs.wake_needed == 'true'
+      - name: Setup Node.js (only if wake_needed OR force_browser)
+        if: steps.precheck.outputs.wake_needed == 'true' || steps.precheck.outputs.force_browser == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: "20"
 
-      - name: Install Playwright (only if wake needed)
-        if: steps.precheck.outputs.wake_needed == 'true'
+      - name: Install Playwright (only if wake_needed OR force_browser)
+        if: steps.precheck.outputs.wake_needed == 'true' || steps.precheck.outputs.force_browser == 'true'
         run: |
           set -euo pipefail
           npm init -y >/dev/null 2>&1
           npm i playwright >/dev/null
           npx playwright install --with-deps chromium
 
-      - name: Wake by clicking the sleep button (only if wake needed)
-        if: steps.precheck.outputs.wake_needed == 'true'
+      - name: Browser keepalive (click if sleeping; otherwise just load)
+        if: steps.precheck.outputs.wake_needed == 'true' || steps.precheck.outputs.force_browser == 'true'
         env:
           APP_URL: ${{ env.APP_URL }}
+          WAKE_NEEDED: ${{ steps.precheck.outputs.wake_needed }}
+          FORCE_BROWSER: ${{ steps.precheck.outputs.force_browser }}
         run: |
           set -euo pipefail
           node - <<'NODE'
@@ -99,8 +110,12 @@ jobs:
 
           (async () => {
             const app = process.env.APP_URL.replace(/\/+$/, '');
+            const wakeNeeded = process.env.WAKE_NEEDED === 'true';
+            const forceBrowser = process.env.FORCE_BROWSER === 'true';
+
             const url = `${app}/?ping=${Date.now()}`;
             console.log("Open:", url);
+            console.log("wakeNeeded:", wakeNeeded, "forceBrowser:", forceBrowser);
 
             const browser = await chromium.launch();
             const page = await browser.newPage({
@@ -109,34 +124,37 @@ jobs:
 
             await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 });
 
-            // 你截图里按钮的精确文案
+            // Only click when we think it's sleeping (or if the button is present anyway)
             const exact = page.getByRole('button', { name: 'Yes, get this app back up!' });
+            const fallback = page.getByRole('button', { name: /get this app back up|wake up/i });
 
+            let clicked = false;
             if (await exact.count()) {
-              console.log("Sleep button found. Clicking...");
+              console.log("Wake button found (exact). Clicking...");
               await exact.first().click({ timeout: 5000 });
+              clicked = true;
+            } else if (await fallback.count()) {
+              console.log("Wake button found (fallback). Clicking...");
+              await fallback.first().click({ timeout: 5000 });
+              clicked = true;
             } else {
-              // 兜底：未来文案变化也能点到
-              const fallback = page.getByRole('button', { name: /get this app back up|wake up/i });
-              if (await fallback.count()) {
-                console.log("Fallback wake button found. Clicking...");
-                await fallback.first().click({ timeout: 5000 });
-              } else {
-                console.log("No wake button found (maybe already awake).");
-              }
+              console.log("No wake button visible.");
             }
 
-            // 等待冷启动：按钮消失 + 页面进入正常 Streamlit 容器（尽量稳）
-            await page.waitForTimeout(2000);
+            // If we clicked, wait longer for cold start; otherwise short wait is enough
+            if (clicked) {
+              await page.waitForTimeout(25000);
+            } else {
+              await page.waitForTimeout(6000);
+            }
+
+            // Best-effort: detect Streamlit container
             try {
-              await page.waitForSelector('div[data-testid="stAppViewContainer"]', { timeout: 60000 });
+              await page.waitForSelector('div[data-testid="stAppViewContainer"]', { timeout: 30000 });
               console.log("Streamlit container detected.");
             } catch {
-              console.log("Streamlit container not detected within timeout (may still be starting).");
+              console.log("Streamlit container not detected (may still be fine).");
             }
-
-            // 再给后端一点时间
-            await page.waitForTimeout(15000);
 
             console.log("Final URL:", page.url());
             await browser.close();
@@ -146,7 +164,7 @@ jobs:
           });
           NODE
 
-      - name: Final check (health must be 200, not sleeping)
+      - name: Final check (health must be 200; root must not be sleeping)
         run: |
           set -euo pipefail
           APP="${APP_URL%/}"
@@ -155,7 +173,6 @@ jobs:
 
           rm -f /tmp/final_cookies.txt /tmp/final_root.html /tmp/final_root_headers.txt /tmp/final_health_headers.txt
 
-          # 强验证：health 连续重试直到 200 或失败
           ok="false"
           for i in 1 2 3 4 5; do
             code="$(curl -sS -L --max-redirs 10 \
@@ -180,7 +197,6 @@ jobs:
             exit 1
           fi
 
-          # 兜底：再抓一次主页，确保不是 Zzzz 睡眠页
           curl -sS -L --max-redirs 20 \
             --connect-timeout 10 --max-time 45 \
             --compressed \
@@ -191,7 +207,7 @@ jobs:
             "$ROOT"
 
           if grep -Eqi "Zzzz|gone to sleep|inactivity|get this app back up" /tmp/final_root.html; then
-            echo "ERROR: still looks like sleeping page after wake attempt"
+            echo "ERROR: still sleeping page after keepalive"
             exit 1
           fi
 
@@ -210,5 +226,3 @@ jobs:
             /tmp/final_root_headers.txt
             /tmp/final_health_headers.txt
 
-
-          echo "OK: App appears awake."
