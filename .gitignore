@@ -1,35 +1,8 @@
-# Python bytecode
-__pycache__/
-*.py[cod]
-*$py.class
-
-# Virtual environments
 venv/
-.env/
-.venv/
-
-# OS-specific
-.DS_Store
-Thumbs.db
-
-# IDE / editor
-.vscode/
-.idea/
-
-# Jupyter
+__pycache__/
+*.pyc
 .ipynb_checkpoints/
-
-# Large raw data (downloaded from NYC OpenData)
-DATA/311_ServiceRequest_2010-Present_*.csv
-DATA/*raw*.csv
-
-# Intermediate / backup results
-results000/
-results/*tmp*.*
-results/*.npy
-
-# Streamlit
-.streamlit/
-
-# Logs
+*.exe
+.DS_Store
+nohup.out
 *.log
