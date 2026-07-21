@@ -11,7 +11,7 @@ This repository contains two explicitly separated computational pipelines:
 
 No real nurse-call, patient, staffing, or clinical workflow data are used. The software is a research proof of concept, not a medical device or deployment-ready clinical monitor.
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17767142.svg)](https://doi.org/10.5281/zenodo.17767142)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21471817.svg)](https://doi.org/10.5281/zenodo.21471817)
 
 ## Canonical release
 
