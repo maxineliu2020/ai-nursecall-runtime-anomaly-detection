@@ -1,0 +1,12 @@
+{
+  "created_max": "2025-10-26T01:49:41",
+  "created_min": "2025-10-16T17:35:07",
+  "data_file": "erm2-nwe9.csv",
+  "data_sha256": "bf29e88716efe5cb4d6fd26e3fc4d46edf05f6545ea3481e99c46199197b97c0",
+  "n_gt_7d": 175,
+  "n_missing_closure": 24671,
+  "n_negative": 8,
+  "n_raw": 100000,
+  "n_retained": 75321,
+  "n_zero": 2319
+}

@@ -1,0 +1,33 @@
+{
+  "IF": {
+    "batch_events": 5321,
+    "batch_s": 0.14635663599983673,
+    "events_per_s": 36356.397259676945,
+    "fit_s": 0.9397348999991664,
+    "model_size_mb": 4.630275,
+    "single_latency_ms_mean": 30.193842980152112,
+    "single_latency_ms_p95": 42.98242239874524,
+    "single_latency_ms_sd": 5.326221653752147,
+    "train_events": 70000
+  },
+  "RF": {
+    "batch_events": 5321,
+    "batch_s": 0.0844134840008337,
+    "events_per_s": 63034.95304076595,
+    "fit_s": 6.7568733419975615,
+    "model_size_mb": 2.416244,
+    "single_latency_ms_mean": 25.95720198502022,
+    "single_latency_ms_p95": 30.094573300448246,
+    "single_latency_ms_sd": 2.6002141005705344,
+    "train_events": 70000
+  },
+  "hardware": {
+    "cgroup_cpu_limit": 8.0,
+    "host_logical_cpu_count": 9,
+    "machine": "x86_64",
+    "model_n_jobs": 1,
+    "platform": "Linux-6.12.13-x86_64-with-glibc2.39",
+    "process_peak_rss_mb": 327.55859375,
+    "python": "3.12.13"
+  }
+}

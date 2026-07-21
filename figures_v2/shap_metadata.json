@@ -1,8 +1,10 @@
 {
-  "shap_version": "0.52.0",
+  "background_candidate_pool": "1000 training records (seeded sample)",
+  "effective_background": "100 records sampled from the candidate pool",
+  "explained": "2000 test records (seeded sample)",
   "explainer": "TreeExplainer",
   "model": "RandomForestClassifier (supervised reference)",
-  "background": "1000 training records (seeded sample)",
-  "explained": "2000 test records (seeded sample)",
-  "output": "probability of anomaly class"
+  "output": "probability of anomaly class",
+  "seed": 101,
+  "shap_version": "0.52.0"
 }

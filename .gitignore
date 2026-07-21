@@ -1,8 +1,12 @@
-venv/
 __pycache__/
-*.pyc
-.ipynb_checkpoints/
-*.exe
+*.py[cod]
+.venv/
+.pytest_cache/
 .DS_Store
-nohup.out
-*.log
+
+# Local scratch outputs; canonical release outputs may be force-added explicitly.
+outputs/smoke_*/
+
+# Streamlit and editor state
+.streamlit/secrets.toml
+.vscode/

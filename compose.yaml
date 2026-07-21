@@ -1,0 +1,16 @@
+services:
+  reproduce:
+    build:
+      context: .
+    working_dir: /workspace
+    volumes:
+      - .:/workspace
+    cpus: 1.0
+    command:
+      - bash
+      - -lc
+      - >-
+        python src/experiment_v2.py &&
+        python src/experiment_synth_v2.py &&
+        python src/make_figures_v2.py &&
+        python src/validate_release.py

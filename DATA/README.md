@@ -1,36 +1,22 @@
-# DATA
+# Canonical data snapshot
 
-This folder contains **input data** for the anomaly-detection experiments.
+`erm2-nwe9.csv` is the fixed 100,000-record NYC Open Data snapshot analysed in the manuscript. Raw 311 columns are retained; response time, hour, weekday, labels, and model features are derived at run time by `src/experiment_v2.py`.
 
-## Files
+## Integrity
 
-- `erm2-nwe9.csv`  
-  Main subset used in the paper and course project. It is derived from the
-  NYC 311 service-request dataset, with additional preprocessing and
-  engineered fields (e.g., response time in hours, weekday, hour of day).
+```text
+File: erm2-nwe9.csv
+SHA-256: bf29e88716efe5cb4d6fd26e3fc4d46edf05f6545ea3481e99c46199197b97c0
+Rows: 100,000
+Created-date range: 2025-10-16 17:35:07 to 2025-10-26 01:49:41
+```
 
-- `311_ServiceRequest_2010-Present_DataDictionary_Updated_2023.xlsx`  
-  Official data dictionary from NYC OpenData describing all columns in the
-  original 311 dataset.
+The pipeline expects the source columns `created_date`, `closed_date`, and `agency`. It excludes records with missing closure timestamps or negative response intervals; zero-duration closures are retained and reported.
 
-> **Note:** The full raw NYC 311 CSV is not committed to this repository
-> because it is large and can change over time. Please download it directly
-> from NYC OpenData following the instructions in `docs/data_sources.md`.
+## Provenance
 
-## Expected Columns (in `erm2-nwe9.csv`)
+Source: City of New York, **311 Service Requests from 2010 to Present**, dataset identifier `erm2-nwe9`.
 
-The preprocessed CSV used by `src/experiment_real_plus.py` is expected to
-contain at least the following columns:
+https://data.cityofnewyork.us/Social-Services/311-Service-Requests-from-2010-to-Present/erm2-nwe9
 
-- `resp_h` – response time in hours (continuous)
-- `is_anomaly` – binary label (1 = anomalous / delayed, 0 = normal)
-- `category` – agency or ticket category (e.g., NYPD, HPD, DSNY, …)
-- `hour` – hour of day (0–23)
-- `weekday` – weekday index (0=Mon … 6=Sun)
-
-The script ignores additional columns and can be safely kept.
-
-
-Data download link
-311 Service Requests from 2010 to Present | NYC Open Data
-https://data.cityofnewyork.us/Social-Services/311-Service-Requests-from-2010-to-Present/erm2-nwe9/about_data
+The accompanying Excel file is the official source data dictionary. Refer to NYC Open Data’s current terms of use when redistributing the snapshot.

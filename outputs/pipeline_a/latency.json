@@ -1,0 +1,12 @@
+{
+  "batch_events_per_s": 44187.01885348497,
+  "hardware": {
+    "cpu_count": 9,
+    "machine": "x86_64",
+    "platform": "Linux-6.12.13-x86_64-with-glibc2.39",
+    "python": "3.12.13"
+  },
+  "model_size_mb": 3.156559,
+  "single_ms_mean": 14.543793889988592,
+  "single_ms_p95": 18.85853335079446
+}
