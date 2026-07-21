@@ -5,7 +5,7 @@ Reproducibility repository for:
 > **Simulation-Based Runtime Anomaly Detection for Nurse Call System Assurance: A Reproducible Proof of Concept Using Public Service-Request Logs**
 > Yuanyuan Liu and David R. Concepcion
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17767142.svg)](https://doi.org/10.5281/zenodo.17767142)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21466809.svg)](https://doi.org/10.5281/zenodo.21466809)
 
 ## What this repository contains
 
