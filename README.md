@@ -81,9 +81,16 @@ archive_v1/           v1.0.1 scripts and outputs, retained read-only for provena
 
 ## Citation
 
-If you use this code or data snapshot, please cite the paper (reference to be
-updated upon publication) and the archived software release
-(doi:10.5281/zenodo.17767142, all versions).
+If you use this code or data snapshot, please cite:
+
+**Software (this version):**
+Liu, Y. & Concepcion, D. R. (2026). *ai-nursecall-runtime-anomaly-detection: v2.0.0 — Revised protocol* (v2.0.0). Zenodo. https://doi.org/10.5281/zenodo.21466809
+
+**Software (all versions):** https://doi.org/10.5281/zenodo.17767142 — concept DOI, always resolves to the latest release.
+
+**Paper:** Liu, Y. & Concepcion, D. R. *Simulation-Based Runtime Anomaly Detection for Nurse Call System Assurance: A Reproducible Proof of Concept Using Public Service-Request Logs.* (under review at *Scientific Reports*; citation to be updated upon publication)
+
+
 
 ## License
 
