@@ -1,0 +1,30 @@
+{
+  "title": "Simulation-Based Runtime Anomaly Detection for Nurse Call System Assurance: Reproducibility Package",
+  "description": "Reproducibility package for the revised Scientific Reports manuscript. The archive contains two explicitly separated computational pipelines: a primary proxy-data pipeline transforming a fixed NYC 311 snapshot into non-clinical, nurse-call-like service logs, and a supplementary fully synthetic anomaly-injection pipeline. It includes source code, pinned environment specifications, canonical per-seed outputs, supplementary audit checks, and 17 publication figures. No real nurse-call, patient, staffing, or clinical workflow data are used. The software is a research proof of concept and not a medical device.",
+  "creators": [
+    {
+      "name": "Liu, Yuanyuan (Maxine)",
+      "affiliation": "Johns Hopkins University; Nova Southeastern University",
+      "orcid": "0000-0003-1410-6893"
+    },
+    {
+      "name": "Concepcion, David R.",
+      "affiliation": "Johns Hopkins University"
+    }
+  ],
+  "upload_type": "software",
+  "access_right": "open",
+  "license": "MIT",
+  "version": "v2.0.1",
+  "language": "eng",
+  "keywords": [
+    "nurse-call systems",
+    "runtime anomaly detection",
+    "assurance",
+    "Isolation Forest",
+    "One-Class SVM",
+    "reproducibility",
+    "proxy data",
+    "synthetic anomaly injection"
+  ]
+}

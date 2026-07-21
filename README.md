@@ -11,11 +11,13 @@ This repository contains two explicitly separated computational pipelines:
 
 No real nurse-call, patient, staffing, or clinical workflow data are used. The software is a research proof of concept, not a medical device or deployment-ready clinical monitor.
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17767142.svg)](https://doi.org/10.5281/zenodo.17767142)
+
 ## Canonical release
 
-- Release: `v2.0.0` (update to `v2.0.1` if publishing the added audit outputs)
-- Version DOI currently cited by the manuscript: `10.5281/zenodo.21466809`
-- Concept DOI: `10.5281/zenodo.17767142`
+- Release: `v2.0.1`
+- Version DOI: assigned automatically when Zenodo archives the `v2.0.1` GitHub release
+- Concept DOI: `10.5281/zenodo.17767142` (resolves to the latest release)
 
 Before publishing a new release, verify that the release archive contains the complete `outputs/`, `figures_v2/`, code, environment file, and data snapshot described below. A new Zenodo version receives a new version DOI; the concept DOI remains unchanged.
 
@@ -186,3 +188,10 @@ python src/validate_release.py
 ## License and attribution
 
 See `LICENSE` for software licensing and `DATA/sources.md` for NYC Open Data provenance and terms. Cite both the manuscript and the version-specific Zenodo record when reusing this package.
+
+## Citation
+
+Machine-readable software citation metadata are provided in `CITATION.cff` and
+Zenodo release metadata in `.zenodo.json`. For reproducibility, cite the
+version-specific DOI shown on the Zenodo record for `v2.0.1`. The concept DOI
+<https://doi.org/10.5281/zenodo.17767142> always resolves to the latest release.
