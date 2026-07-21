@@ -1,0 +1,222 @@
+[
+  {
+    "include_resp_h": true,
+    "n": 75321,
+    "n_test": 15065,
+    "n_test_positive": 7626,
+    "n_train": 45192,
+    "n_validation": 15064,
+    "prevalence": 0.5061802153449901,
+    "sampling": null,
+    "seed": 101,
+    "timeout_h": 2.0,
+    "top_categories": [
+      "NYPD",
+      "HPD",
+      "DSNY",
+      "DEP",
+      "DOT",
+      "DOB",
+      "DHS",
+      "DPR"
+    ]
+  },
+  {
+    "include_resp_h": true,
+    "n": 75321,
+    "n_test": 15065,
+    "n_test_positive": 7626,
+    "n_train": 45192,
+    "n_validation": 15064,
+    "prevalence": 0.5061802153449901,
+    "sampling": null,
+    "seed": 102,
+    "timeout_h": 2.0,
+    "top_categories": [
+      "NYPD",
+      "HPD",
+      "DSNY",
+      "DEP",
+      "DOT",
+      "DOB",
+      "DHS",
+      "DPR"
+    ]
+  },
+  {
+    "include_resp_h": true,
+    "n": 75321,
+    "n_test": 15065,
+    "n_test_positive": 7626,
+    "n_train": 45192,
+    "n_validation": 15064,
+    "prevalence": 0.5061802153449901,
+    "sampling": null,
+    "seed": 103,
+    "timeout_h": 2.0,
+    "top_categories": [
+      "NYPD",
+      "HPD",
+      "DSNY",
+      "DEP",
+      "DOT",
+      "DOB",
+      "DHS",
+      "DPR"
+    ]
+  },
+  {
+    "include_resp_h": true,
+    "n": 75321,
+    "n_test": 15065,
+    "n_test_positive": 7626,
+    "n_train": 45192,
+    "n_validation": 15064,
+    "prevalence": 0.5061802153449901,
+    "sampling": null,
+    "seed": 104,
+    "timeout_h": 2.0,
+    "top_categories": [
+      "NYPD",
+      "HPD",
+      "DSNY",
+      "DEP",
+      "DOT",
+      "DOB",
+      "DHS",
+      "DPR"
+    ]
+  },
+  {
+    "include_resp_h": true,
+    "n": 75321,
+    "n_test": 15065,
+    "n_test_positive": 7626,
+    "n_train": 45192,
+    "n_validation": 15064,
+    "prevalence": 0.5061802153449901,
+    "sampling": null,
+    "seed": 105,
+    "timeout_h": 2.0,
+    "top_categories": [
+      "NYPD",
+      "HPD",
+      "DSNY",
+      "DEP",
+      "DOT",
+      "DOB",
+      "DHS",
+      "DPR"
+    ]
+  },
+  {
+    "include_resp_h": true,
+    "n": 75321,
+    "n_test": 15065,
+    "n_test_positive": 7626,
+    "n_train": 45192,
+    "n_validation": 15064,
+    "prevalence": 0.5061802153449901,
+    "sampling": null,
+    "seed": 106,
+    "timeout_h": 2.0,
+    "top_categories": [
+      "NYPD",
+      "HPD",
+      "DSNY",
+      "DEP",
+      "DOT",
+      "DOB",
+      "DHS",
+      "DPR"
+    ]
+  },
+  {
+    "include_resp_h": true,
+    "n": 75321,
+    "n_test": 15065,
+    "n_test_positive": 7626,
+    "n_train": 45192,
+    "n_validation": 15064,
+    "prevalence": 0.5061802153449901,
+    "sampling": null,
+    "seed": 107,
+    "timeout_h": 2.0,
+    "top_categories": [
+      "NYPD",
+      "HPD",
+      "DSNY",
+      "DEP",
+      "DOT",
+      "DOB",
+      "DHS",
+      "DPR"
+    ]
+  },
+  {
+    "include_resp_h": true,
+    "n": 75321,
+    "n_test": 15065,
+    "n_test_positive": 7626,
+    "n_train": 45192,
+    "n_validation": 15064,
+    "prevalence": 0.5061802153449901,
+    "sampling": null,
+    "seed": 108,
+    "timeout_h": 2.0,
+    "top_categories": [
+      "NYPD",
+      "HPD",
+      "DSNY",
+      "DEP",
+      "DOT",
+      "DOB",
+      "DHS",
+      "DPR"
+    ]
+  },
+  {
+    "include_resp_h": true,
+    "n": 75321,
+    "n_test": 15065,
+    "n_test_positive": 7626,
+    "n_train": 45192,
+    "n_validation": 15064,
+    "prevalence": 0.5061802153449901,
+    "sampling": null,
+    "seed": 109,
+    "timeout_h": 2.0,
+    "top_categories": [
+      "NYPD",
+      "HPD",
+      "DSNY",
+      "DEP",
+      "DOT",
+      "DOB",
+      "DHS",
+      "DPR"
+    ]
+  },
+  {
+    "include_resp_h": true,
+    "n": 75321,
+    "n_test": 15065,
+    "n_test_positive": 7626,
+    "n_train": 45192,
+    "n_validation": 15064,
+    "prevalence": 0.5061802153449901,
+    "sampling": null,
+    "seed": 110,
+    "timeout_h": 2.0,
+    "top_categories": [
+      "NYPD",
+      "HPD",
+      "DSNY",
+      "DEP",
+      "DOT",
+      "DOB",
+      "DHS",
+      "DPR"
+    ]
+  }
+]

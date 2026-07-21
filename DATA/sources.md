@@ -10,6 +10,9 @@
 - License/terms: NYC Open Data terms of use.
 
 ## Using your own data
-Provide a CSV with created/closed timestamp columns (any of the synonyms detected
-by the loader) and optionally a category column. The pipeline derives
-`response_time_h`, `hour`, `weekday`, and one-hot top-8 categories.
+The canonical Pipeline B script requires the source columns `created_date`,
+`closed_date`, and `agency`. Rename equivalent fields before running the
+manuscript analysis. The simplified Streamlit companion can detect common
+created/closed date column variants, but that convenience loader is not part of
+the canonical experiment. The pipeline derives `resp_h`, `hour`, `weekday`, and
+one-hot top-eight agency indicators.

@@ -1,0 +1,78 @@
+{
+  "data_sha256": "bf29e88716efe5cb4d6fd26e3fc4d46edf05f6545ea3481e99c46199197b97c0",
+  "dpi": 300,
+  "figures": [
+    {
+      "file": "Fig1_architecture.png",
+      "sha256": "dfb6d9480aaa5ceaf8266fd6fbf5f514cf83223eae6e3370390a6be882995f43"
+    },
+    {
+      "file": "Fig2_heatmap_weekday_hour.png",
+      "sha256": "3d6bc780f9997f3c492295554fddd7998345677d8bb15dc518dcc42384ef622d"
+    },
+    {
+      "file": "Fig3_metrics_bar_ci.png",
+      "sha256": "fc835c29424a18c88fd5e0fe30bc55a0feda312a00b64ff17d9470f166b0dd0a"
+    },
+    {
+      "file": "Fig4_pr_curves.png",
+      "sha256": "9bacd75b8d3597f8a5777b72923e5ab7e04d485680a3af44b4b5e9844590b3cd"
+    },
+    {
+      "file": "Fig5_shap_rf_bar.png",
+      "sha256": "a22faf976609e8a7ac208e9325d883b5b4f9f16c6ac1e1c3005e7f9dae316c1a"
+    },
+    {
+      "file": "Fig6_threshold_sensitivity.png",
+      "sha256": "f4240714810cf78e1dcff065422093924f436e9bc6af1a5d63d8bf60327dd876"
+    },
+    {
+      "file": "Fig7_ablation_pr.png",
+      "sha256": "5c0a51043d0dcd1e3457f45b1b95d0ede5fcbb1c5f97eac6b69c735f13212ebf"
+    },
+    {
+      "file": "Fig8_timeout_sweep.png",
+      "sha256": "82cf8666a4055e7043cecad3829de5ae4c93eea0366f0f82332e7546d3493ac6"
+    },
+    {
+      "file": "Fig9_prevalence_sensitivity.png",
+      "sha256": "a16d534861543b754c9c47c2123604328687fa7735f55ce250dfddfc30a3663b"
+    },
+    {
+      "file": "FigS1_cm_IF.png",
+      "sha256": "8594c49b8b8ddc31383a994f79b5d069a10a388067066bfdec9a6f9fbc8243b7"
+    },
+    {
+      "file": "FigS2_hist_response_time.png",
+      "sha256": "68fc07ecfd756b8c2b5c37da7b6d82f086206341fb40a2a9e0e04f866001a1ec"
+    },
+    {
+      "file": "FigS3_category_distribution.png",
+      "sha256": "be85779a98de668981a9e8f1439819271728cda8f53770c5447c5e8a3c7ec6d2"
+    },
+    {
+      "file": "FigS4_ops_IF.png",
+      "sha256": "716d6e0604472ee9157df8f38b127ce07779225df13e994fabb7acbb4370d649"
+    },
+    {
+      "file": "FigS5_ops_OCSVM.png",
+      "sha256": "0c8c6f99e92eb05abec04818a198106ae398c19b21f5a5ba18a4b58f96339b96"
+    },
+    {
+      "file": "FigS6_ops_RF.png",
+      "sha256": "6a5af4ba90d0419c15d97a2bcfb8d571466cb31d7978c37f36fe25c9052935fc"
+    },
+    {
+      "file": "FigS7_synth_per_type_recall.png",
+      "sha256": "12ad6bd088a21cdeea93d32ecbfcdf250708e98c4a5c8a5e2dbe42faec3c81a8"
+    },
+    {
+      "file": "FigS8_synth_f1_vs_rate.png",
+      "sha256": "c619059c613e7fca9980fa3228ae1870ad5e8949623a7d35dd7fae8f8057693e"
+    }
+  ],
+  "pipeline_a_results": "outputs/pipeline_a",
+  "pipeline_b_results": "outputs/pipeline_b",
+  "protocol": "v2",
+  "seed_for_representative_figures": 101
+}

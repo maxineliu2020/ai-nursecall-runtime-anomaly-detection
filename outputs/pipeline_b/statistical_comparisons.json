@@ -1,0 +1,46 @@
+{
+  "IF_AP_with_vs_without_resp_h": {
+    "design": "Two-sided paired t-test across matched split/model seeds.",
+    "mean_ap_with_resp_h": 0.7598076612715119,
+    "mean_ap_without_resp_h": 0.6716213861609447,
+    "mean_paired_difference": 0.08818627511056717,
+    "metric": "ap",
+    "n_pairs": 10,
+    "p_value_two_sided": 1.463556813782662e-11,
+    "seeds": [
+      101,
+      102,
+      103,
+      104,
+      105,
+      106,
+      107,
+      108,
+      109,
+      110
+    ],
+    "t_statistic": 41.17872508647635
+  },
+  "IF_F1_with_vs_without_resp_h": {
+    "design": "Two-sided paired t-test across matched split/model seeds.",
+    "mean_f1_with_resp_h": 0.7514690948070782,
+    "mean_f1_without_resp_h": 0.6871460957373183,
+    "mean_paired_difference": 0.06432299906975993,
+    "metric": "f1",
+    "n_pairs": 10,
+    "p_value_two_sided": 2.5779464817405203e-11,
+    "seeds": [
+      101,
+      102,
+      103,
+      104,
+      105,
+      106,
+      107,
+      108,
+      109,
+      110
+    ],
+    "t_statistic": 38.65575789257265
+  }
+}

@@ -1,0 +1,47 @@
+name: code-quality
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+
+      - name: Compile canonical source files
+        run: >-
+          python -m py_compile
+          src/experiment_v2.py
+          src/experiment_synth_v2.py
+          src/make_figures_v2.py
+          src/validate_release.py
+          streamlit/app.py
+
+      - name: Verify command-line interfaces
+        run: |
+          python src/experiment_v2.py --help
+          python src/experiment_synth_v2.py --help
+          python src/make_figures_v2.py --help
+
+      - name: Reject machine-specific paths in canonical source
+        run: |
+          if grep -RInE '/home/|/mnt/|[A-Za-z]:\\\\Users\\\\' src streamlit; then
+            echo "Machine-specific path found in canonical source."
+            exit 1
+          fi
