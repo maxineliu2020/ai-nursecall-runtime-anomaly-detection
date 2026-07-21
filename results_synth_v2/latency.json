@@ -1,0 +1,6 @@
+{
+  "single_ms_mean": 11.8566390900007,
+  "single_ms_p95": 14.780937300008645,
+  "batch_events_per_s": 44503.39479771269,
+  "model_size_mb": 3.15655
+}

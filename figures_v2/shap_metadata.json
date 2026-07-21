@@ -1,0 +1,8 @@
+{
+  "shap_version": "0.52.0",
+  "explainer": "TreeExplainer",
+  "model": "RandomForestClassifier (supervised reference)",
+  "background": "1000 training records (seeded sample)",
+  "explained": "2000 test records (seeded sample)",
+  "output": "probability of anomaly class"
+}
