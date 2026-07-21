@@ -76,7 +76,7 @@ archive_v1/           v1.0.1 scripts and outputs, retained read-only for provena
 ## Authors
 
 - **Yuanyuan (Maxine) Liu** — Johns Hopkins University; Nova Southeastern University
-  (corresponding: jliu536@jh.edu, ORCID 0000-0003-3410-6893)
+  (corresponding: yliu536@jh.edu, ORCID 0000-0003-3410-6893)
 - **David R. Concepcion** — Johns Hopkins University
 
 ## Citation
