@@ -5,7 +5,7 @@
     {
       "name": "Liu, Yuanyuan (Maxine)",
       "affiliation": "Johns Hopkins University; Nova Southeastern University",
-      "orcid": "0000-0003-1410-6893"
+      "orcid": "0000-0003-3410-6893"
     },
     {
       "name": "Concepcion, David R.",
@@ -15,7 +15,7 @@
   "upload_type": "software",
   "access_right": "open",
   "license": "MIT",
-  "version": "v2.0.1",
+  "version": "v2.0.2",
   "language": "eng",
   "keywords": [
     "nurse-call systems",

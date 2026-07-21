@@ -15,8 +15,8 @@ No real nurse-call, patient, staffing, or clinical workflow data are used. The s
 
 ## Canonical release
 
-- Release: `v2.0.1`
-- Version DOI: assigned automatically when Zenodo archives the `v2.0.1` GitHub release
+- Release: `v2.0.2`
+- Version DOI: assigned automatically when Zenodo archives the `v2.0.2` GitHub release
 - Concept DOI: `10.5281/zenodo.17767142` (resolves to the latest release)
 
 Before publishing a new release, verify that the release archive contains the complete `outputs/`, `figures_v2/`, code, environment file, and data snapshot described below. A new Zenodo version receives a new version DOI; the concept DOI remains unchanged.
@@ -193,5 +193,5 @@ See `LICENSE` for software licensing and `DATA/sources.md` for NYC Open Data pro
 
 Machine-readable software citation metadata are provided in `CITATION.cff` and
 Zenodo release metadata in `.zenodo.json`. For reproducibility, cite the
-version-specific DOI shown on the Zenodo record for `v2.0.1`. The concept DOI
+version-specific DOI shown on the Zenodo record for `v2.0.2`. The concept DOI
 <https://doi.org/10.5281/zenodo.17767142> always resolves to the latest release.

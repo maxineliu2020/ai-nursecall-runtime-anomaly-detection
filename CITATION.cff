@@ -1,13 +1,13 @@
 cff-version: 1.2.0
 message: "If you use this software, cite the Zenodo record; the concept DOI resolves to the latest release."
 title: "Simulation-Based Runtime Anomaly Detection for Nurse Call System Assurance: Reproducibility Package"
-version: 2.0.1
+version: 2.0.2
 doi: 10.5281/zenodo.17767142
 date-released: 2026-07-21
 authors:
   - family-names: Liu
     given-names: "Yuanyuan (Maxine)"
-    orcid: "https://orcid.org/0000-0003-1410-6893"
+    orcid: "https://orcid.org/0000-0003-3410-6893"
     affiliation: "Johns Hopkins University; Nova Southeastern University"
   - family-names: Concepcion
     given-names: "David R."
